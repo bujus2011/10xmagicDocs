@@ -1,0 +1,63 @@
+graph TB
+    subgraph "Azure DevOps Organization"
+        PR[Pull Request] -->|triggers| Pipeline[Azure Pipeline YAML]
+        Push[Git Push] -->|triggers| Pipeline
+        Schedule[Scheduled Trigger] -->|triggers| Pipeline
+    end
+    
+    subgraph "Pipeline Execution"
+        Pipeline --> Stage1[Stage: Build]
+        Pipeline --> Stage2[Stage: Test]
+        Pipeline --> Stage3[Stage: Deploy Infrastructure]
+        Pipeline --> Stage4[Stage: Deploy Application]
+        
+        Stage1 --> Job1[Job: Build Application]
+        Stage2 --> Job2[Job: Unit Tests]
+        Stage3 --> Job3[Job: ARM/Bicep Deployment]
+        Stage4 --> Job4[Job: App Service Deploy]
+        
+        Job1 --> Steps1[Steps: npm build, archive]
+        Job2 --> Steps2[Steps: npm test, coverage]
+        Job3 --> Steps3[Steps: ARM validation, deploy]
+        Job4 --> Steps4[Steps: slot deploy, swap]
+    end
+    
+    subgraph "Agent Pools"
+        Steps1 --> Agent1[Microsoft-hosted Agent Ubuntu]
+        Steps2 --> Agent1
+        Steps3 --> Agent2[Microsoft-hosted Agent Ubuntu]
+        Steps4 --> Agent2
+    end
+    
+    subgraph "Azure Resources"
+        Steps3 -->|deploys| ARM[ARM/Bicep Templates]
+        ARM --> RG[Resource Group]
+        RG --> AppPlan[App Service Plan]
+        RG --> WebApp[Web App + Staging Slot]
+        RG --> KeyVault[Key Vault for Secrets]
+        
+        Steps4 -->|deploys to| WebApp
+    end
+    
+    subgraph "Artifacts & Secrets"
+        Job1 -->|publishes| Artifacts[Build Artifacts]
+        Artifacts --> Job4
+        KeyVault -->|secrets| Pipeline
+        VarGroup[Variable Groups] -->|configuration| Pipeline
+    end
+    
+    subgraph "Service Connections"
+        Pipeline -.->|authenticates via| SP[Service Principal / Managed Identity]
+        SP -.->|RBAC access| Azure[Azure Subscription]
+    end
+    
+    WebApp -->|monitoring| AppInsights[Application Insights]
+    AppInsights -->|gates check| Stage4
+    
+    style Pipeline fill:#0078d4,stroke:#ffffff,stroke-width:2px,color:#ffffff
+    style WebApp fill:#0078d4,stroke:#ffffff,stroke-width:2px,color:#ffffff
+    style Agent1 fill:#107c10,stroke:#ffffff,stroke-width:2px,color:#ffffff
+    style Agent2 fill:#107c10,stroke:#ffffff,stroke-width:2px,color:#ffffff
+    style KeyVault fill:#ffb900,stroke:#ffffff,stroke-width:2px,color:#000000
+    style AppInsights fill:#ffb900,stroke:#ffffff,stroke-width:2px,color:#000000
+
