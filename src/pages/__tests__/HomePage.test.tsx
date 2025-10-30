@@ -53,25 +53,34 @@ describe("HomePage", () => {
     );
     expect(pytorchDescription).toBeInTheDocument();
 
-    // Check that there are 2 "Start Learning" buttons (one for each subject)
+    // Test the Azure CI/CD subject card
+    const azureTitle = screen.getByText("Pierwsze kroki z CI/CD w AZURE");
+    expect(azureTitle).toBeInTheDocument();
+
+    const azureDescription = screen.getByText(
+      "Automatyzacja pipeline'ów w chmurze Microsoft z wykorzystaniem Azure DevOps i Azure Pipelines",
+    );
+    expect(azureDescription).toBeInTheDocument();
+
+    // Check that there are 3 "Start Learning" buttons (one for each subject)
     const startButtons = screen.getAllByText("Start Learning");
-    expect(startButtons).toHaveLength(2);
+    expect(startButtons).toHaveLength(3);
   });
 
   it("renders placeholder tiles for remaining slots", () => {
     renderHomePage();
 
-    // Since we have 2 real subjects and TOTAL_TILES is 25, we should have 23 placeholder tiles
+    // Since we have 3 real subjects and TOTAL_TILES is 25, we should have 22 placeholder tiles
     const placeholderDescriptions = screen.getAllByText(
       "Use Agentic AI to create new learning paths",
     );
-    expect(placeholderDescriptions).toHaveLength(23);
+    expect(placeholderDescriptions).toHaveLength(22);
 
     // Check if placeholder buttons are disabled
     const disabledButtons = screen.getAllByRole("button", {
       name: /Subject \d+/,
     });
-    expect(disabledButtons).toHaveLength(23);
+    expect(disabledButtons).toHaveLength(22);
     disabledButtons.forEach((button) => {
       expect(button).toHaveAttribute("disabled");
     });
